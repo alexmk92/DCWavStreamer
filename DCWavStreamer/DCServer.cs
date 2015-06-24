@@ -5,6 +5,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Net;
+using DCWavStreamer.Audio;
 
 namespace DCWavStreamer
 {
@@ -19,9 +20,9 @@ namespace DCWavStreamer
         /// m_serverSocket : reference to the socket that maintains a connection to the server via TCP
         /// 
         /// </summary>
-        private static byte[]       m_dataBuffer;
+        private static byte[] m_dataBuffer;
         private static List<Socket> m_clients;
-        private static Socket       m_serverSocket;
+        private static Socket m_serverSocket;
 
         /// <summary>
         /// 
@@ -48,8 +49,8 @@ namespace DCWavStreamer
 
             // Perform any initialisation of member variables, dependent on values set in 
             // the configuration struct
-            m_clients      = new List<Socket>();
-            m_dataBuffer   = new byte[config.INBOUND_BUFFER_SIZE];
+            m_clients = new List<Socket>();
+            m_dataBuffer = new byte[config.INBOUND_BUFFER_SIZE];
             m_serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             // Attempt to initialise the server by binding the server to the socket, this will be our listener
@@ -60,7 +61,7 @@ namespace DCWavStreamer
             try
             {
                 m_serverSocket.Bind(new IPEndPoint(IPAddress.Parse(config.SERVER_ADDR), config.SERVER_PORT));
-                m_serverSocket.Listen(config.BACK_LOG_SIZE); 
+                m_serverSocket.Listen(config.BACK_LOG_SIZE);
                 m_serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
             }
             catch (Exception e)
@@ -110,8 +111,8 @@ namespace DCWavStreamer
             {
                 // Get the pointer to our socket from the result, and then create a temporary buffer
                 // to pull the information from 
-                var socket    = (Socket)res.AsyncState;
-                int data      = socket.EndReceive(res);
+                var socket = (Socket)res.AsyncState;
+                int data = socket.EndReceive(res);
                 var tmpBuffer = new byte[data];
 
                 // Copy the request data into the temp buffer (this is written to in accept callback from the connecting socket)
@@ -131,8 +132,10 @@ namespace DCWavStreamer
                         // Convert the WAV chunk to a byte array and send it to the current socket, once the data
                         // has been transmitted the socket will automatically end its sending state and start listening
                         // for more data, this is how we set up our continuous stream from client to server...
-                        byte[] data = Encoding.ASCII.GetBytes("data to be sent to the client as a byte array - put the wav chunk here?");
-                        socket.BeginSend(data, 0, data.Length, SocketFlags.None, new AsyncCallback(SendCallback), socket);
+                        // Collect byte information from audio file
+                        ALawWaveStream waveStream = new ALawWaveStream("holdmusic.wav");
+                        byte[] byteChunk = waveStream.getByteChunk(0, 3);
+                        socket.BeginSend(byteChunk, 0, byteChunk.Length, SocketFlags.None, new AsyncCallback(SendCallback), socket);
                         socket.BeginReceive(m_dataBuffer, 0, m_dataBuffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), socket);
                     }
                     catch (Exception e)
