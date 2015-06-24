@@ -17,6 +17,7 @@ namespace DCWavStreamer
         private int    m_numSongs;
         private int    m_currSong;
         private int    m_currPos;
+        private byte[] m_songs;
 
         /// <summary>
         /// 
