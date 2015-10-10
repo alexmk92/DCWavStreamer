@@ -44,6 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Audio\ALawWaveStream.cs" />
+    <Compile Include="Audio\WaveProviderToWaveStream.cs" />
+    <Compile Include="Auth.cs" />
     <Compile Include="DCConfig.cs" />
     <Compile Include="DCServer.cs" />
     <Compile Include="Program.cs" />
